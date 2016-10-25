@@ -1,48 +1,32 @@
-A *production-ready* image for Odoo 8 
-=====================================
+# A minimal Ubuntu base image modified for Docker-friendliness
 
-This image weighs just over 1Gb. Keep in mind that Odoo is a very extensive suite of business applications written in Python. We designed this image with built-in external dependencies and almost nothing useless. It is used from development to production on version 8.0 with various community addons.
+[![](https://badge.imagelayers.io/phusion/baseimage:0.9.17.svg)](https://imagelayers.io/?images=phusion/baseimage:latest 'Get your own badge on imagelayers.io')
 
-Odoo version
-============
+_Baseimage-docker only consumes 6 MB RAM and is much powerful than Busybox or Alpine. See why below._
 
-This docker builds with a tested version of Odoo (formerly OpenERP) AND related dependencies. We do not intend to follow the git. The packed versions of Odoo have always been tested against our CI chain and are considered as production grade. We update the revision pretty often, though :)
+Baseimage-docker is a special [Docker](https://www.docker.com) image that is configured for correct use within Docker containers. It is Ubuntu, plus:
 
-This is important to do in this way (as opposed to a latest nightly build) because we want to ensure reliability and keep control of external dependencies.
+ * Modifications for Docker-friendliness.
+ * Administration tools that are especially useful in the context of Docker.
+ * Mechanisms for easily running multiple processes, [without violating the Docker philosophy](#docker_single_process).
 
-You may use your own sources simply by binding your local Odoo folder to /opt/odoo/sources/odoo/
+You can use it as a base for your own Docker images.
 
-Here are the current revisions from https://github.com/trabacus-softapps/odoo/archive/saas-6.tar.gz for each docker tag
+Baseimage-docker is available for pulling from [the Docker registry](https://registry.hub.docker.com/u/phusion/baseimage/)!
 
-    # production grade
-    docker/odoobase:8.0	42db2db4922764a9dc7f5e8325f60b7c62c1862a (branch saas-6)
+### What are the problems with the stock Ubuntu base image?
 
-Start Odoo
-----------
+Ubuntu is not designed to be run inside Docker. Its init system, Upstart, assumes that it's running on either real hardware or virtualized hardware, but not inside a Docker container. But inside a container you don't want a full system anyway, you want a minimal system. But configuring that minimal system for use within a container has many strange corner cases that are hard to get right if you are not intimately familiar with the Unix system model. This can cause a lot of strange problems.
 
-`Usage: docker run [OPTIONS] xyz/odoo[:TAG] [COMMAND ...]`
+Baseimage-docker gets everything right. The "Contents" section describes all the things that it modifies.
 
-Run odoo in a docker container.
+### Why use baseimage-docker?
 
-Positional arguments:
-  COMMAND          The command to run. (default: help)
+You can configure the stock `ubuntu` image yourself from your Dockerfile, so why bother using baseimage-docker?
 
-Commands:
-  help             Show this help message
-  start            Run odoo server in the background (accept additional arguments passed to odoo command)
-  login            Run in shell mode as odoo user
+ * Configuring the base system for Docker-friendliness is no easy task. As stated before, there are many corner cases. By the time that you've gotten all that right, you've reinvented baseimage-docker. Using baseimage-docker will save you from this effort.
+ * It reduces the time needed to write a correct Dockerfile. You won't have to worry about the base system and can focus on your stack and your app.
+ * It reduces the time needed to run `docker build`, allowing you to iterate your Dockerfile more quickly.
+ * It reduces download time during redeploys. Docker only needs to download the base image once: during the first deploy. On every subsequent deploys, only the changes you make on top of the base image are downloaded.
 
-Examples:
-----------
-  
-  Run odoo V8 in the background as `xyz.odoo` on localhost:8069 and use /your/local/etc/ to load odoo.conf
-
-	$ docker run --name="xyz.odoo" -v /your/local/etc:/opt/odoo/etc -p 8069:8069 -d xyz/odoo:8.0 start
-
-  Run the V8 image with an interactive shell and remove the container on logout
-
-  	$ docker run -ti --rm xyz/odoo:8.0 login
-
-  Run the v8 image and enforce a database `mydb` update, then remove the container
-
-	$ docker run -ti --rm  xyz/odoo:8.0 start --update=all --workers=0 --max-cron-threads=0 --no-xmlrpc --database=mydb --stop-after-init
+-----------------------------------------
