@@ -12,7 +12,7 @@ RUN /pd_build/install.sh
 # Execution environment
 USER 0
 
-VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/additional_addons", "/opt/odoo/data"]
+VOLUME ["/opt/odoo/var", "/opt/odoo/etc", "/opt/odoo/data"]
 
 #ADD sources/odoo.conf /opt/odoo/etc/odoo.conf
 WORKDIR /app
